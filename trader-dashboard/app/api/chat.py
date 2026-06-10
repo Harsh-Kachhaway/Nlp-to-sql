@@ -36,7 +36,7 @@ async def chat_endpoint(request: QueryRequest):
     try:
         # 1. Add secret guardrails to keep the AI on track
         # This forces the model to stick to your specific tables
-        guardrails = "\n\nCRITICAL AI INSTRUCTIONS:\n- Use ONLY the tables 'funds' and 'daily_pnl'.\n- Do NOT wrap SQL queries in markdown tags.\n- Give a clear, helpful final answer."
+        guardrails = "\n\nCRITICAL AI INSTRUCTIONS:\n- Do NOT wrap SQL queries in markdown tags.\n- Give a clear, helpful final answer."
         full_prompt = request.question + guardrails
         
         # 2. Execute the LangChain workflow

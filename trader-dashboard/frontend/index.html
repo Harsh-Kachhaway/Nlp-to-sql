@@ -3,60 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trader AI Dashboard</title>
+    <title>TraderBlotter | AI Terminal</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#2dd4bf', // Teal 400
+                            500: '#14b8a6', // Teal 500
+                            600: '#0d9488', // Teal 600
+                        },
+                        dark: {
+                            900: '#0f172a', // Slate 900
+                            950: '#020617', // Slate 950
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        /* Custom scrollbar for a polished look */
-        ::-webkit-scrollbar { width: 6px; }
+        body { background-color: #020617; }
+        
+        /* Premium Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
-        body { background-color: #030712; } /* Extremely dark gray/black */
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; border: 2px solid #020617; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Markdown Styles for AI Responses */
+        .markdown-body p { margin-bottom: 0.75rem; }
+        .markdown-body pre { background: #0f172a; padding: 1rem; border-radius: 0.5rem; border: 1px solid #1e293b; overflow-x: auto; margin-top: 0.5rem; margin-bottom: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;}
+        .markdown-body code { color: #2dd4bf; background: #0f172a; padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.85em; }
+        .markdown-body table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 1rem; font-size: 0.875rem; }
+        .markdown-body th, .markdown-body td { border: 1px solid #334155; padding: 0.5rem 0.75rem; text-align: left; }
+        .markdown-body th { background-color: #0f172a; color: #94a3b8; font-weight: 500; }
+        .markdown-body strong { color: #f8fafc; font-weight: 600; }
     </style>
 </head>
-<body class="text-gray-100 font-sans min-h-screen flex flex-col h-screen">
+<body class="text-slate-300 font-sans h-screen flex overflow-hidden">
 
-    <header class="border-b border-gray-800 bg-gray-900/80 backdrop-blur-md px-6 py-4 flex justify-between items-center shrink-0">
-        <div>
-            <h1 class="text-xl font-bold tracking-wide text-emerald-400">📈 TraderBlotter AI</h1>
-            <p class="text-xs text-gray-400 mt-0.5">Local Text-to-SQL Engine</p>
+    <aside class="w-64 bg-dark-900 border-r border-slate-800 hidden md:flex flex-col shrink-0">
+        <div class="p-5 border-b border-slate-800">
+            <h1 class="text-xl font-bold tracking-tight text-brand-400 flex items-center gap-2">
+                <i class="fa-solid fa-chart-line"></i> TraderBlotter
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">Data Query Terminal v1.0</p>
         </div>
-        <div class="flex items-center space-x-2 bg-gray-800 px-3 py-1.5 rounded-full border border-gray-700">
-            <span class="flex h-2 w-2 relative">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span class="text-xs text-gray-300 font-mono" id="connection-status">System Ready</span>
-        </div>
-    </header>
-
-    <main id="chat-container" class="flex-1 w-full max-w-4xl mx-auto p-6 overflow-y-auto space-y-6 pb-32">
         
-        <div class="flex justify-start">
-            <div class="bg-gray-900 border border-gray-800 text-gray-200 rounded-2xl rounded-tl-none p-5 max-w-2xl shadow-sm">
-                <p class="text-sm leading-relaxed text-gray-300">
-                    Welcome to your local data terminal. I am connected to your SQLite database containing <strong>Funds</strong> and <strong>Daily PnL</strong>. Ask me anything in plain English!
-                </p>
-                <div class="mt-4 flex flex-wrap gap-2">
-                    <button class="sample-btn text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg px-3 py-1.5 text-emerald-400 transition">Show me top 3 funds by daily PnL</button>
-                    <button class="sample-btn text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg px-3 py-1.5 text-emerald-400 transition">What is the worst PnL for Emma Jenkins?</button>
+        <div class="p-5 flex-1 overflow-y-auto">
+            <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Database Schema</h2>
+            
+            <div class="mb-4">
+                <div class="flex items-center gap-2 text-slate-300 text-sm font-medium mb-1.5">
+                    <i class="fa-solid fa-table text-brand-500/70"></i> funds
+                </div>
+                <div class="pl-6 text-xs text-slate-500 font-mono space-y-1">
+                    <p>id (INT) <span class="text-amber-500/70 ml-1">PK</span></p>
+                    <p>name (VARCHAR)</p>
+                    <p>short_code (VARCHAR)</p>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex items-center gap-2 text-slate-300 text-sm font-medium mb-1.5">
+                    <i class="fa-solid fa-table text-brand-500/70"></i> daily_pnl
+                </div>
+                <div class="pl-6 text-xs text-slate-500 font-mono space-y-1">
+                    <p>id (INT) <span class="text-amber-500/70 ml-1">PK</span></p>
+                    <p>valuation_date (DATE)</p>
+                    <p>trader_name (VARCHAR)</p>
+                    <p>daily_pnl (BIGINT)</p>
+                    <p>account_id (INT) <span class="text-blue-400/70 ml-1">FK</span></p>
                 </div>
             </div>
         </div>
 
-    </main>
+        <div class="p-4 border-t border-slate-800">
+            <div class="flex items-center gap-3 px-3 py-2 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                <div class="relative flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-500"></span>
+                </div>
+                <span class="text-xs font-medium text-slate-300">FastAPI Connected</span>
+            </div>
+        </div>
+    </aside>
 
-    <footer class="fixed bottom-0 w-full bg-gradient-to-t from-gray-950 via-gray-950/90 to-transparent pt-10 pb-6 px-4">
-        <form id="chat-form" class="max-w-4xl mx-auto flex gap-3 relative">
-            <input type="text" id="user-input" required autocomplete="off"
-                placeholder="Ask a data question..." 
-                class="flex-1 bg-gray-900 border border-gray-700 rounded-xl pl-5 pr-4 py-4 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition shadow-lg text-white placeholder-gray-500">
+    <main class="flex-1 flex flex-col relative bg-dark-950">
+        
+        <header class="md:hidden flex items-center justify-between p-4 border-b border-slate-800 bg-dark-900/80 backdrop-blur-md z-10">
+            <h1 class="text-lg font-bold text-brand-400"><i class="fa-solid fa-chart-line"></i> TraderBlotter</h1>
+            <div class="h-2 w-2 rounded-full bg-brand-500 shadow-[0_0_8px_rgba(20,184,166,0.8)]"></div>
+        </header>
+
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth pb-32">
             
-            <button type="submit" id="submit-btn"
-                class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 py-4 rounded-xl transition shadow-lg active:scale-95 flex items-center justify-center min-w-[100px]">
-                <span>Execute</span>
-            </button>
-        </form>
-    </footer>
+            <div class="flex justify-start mb-6">
+                <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mr-3 shrink-0">
+                    <i class="fa-solid fa-robot text-brand-400 text-sm"></i>
+                </div>
+                <div class="bg-dark-900 border border-slate-800 text-slate-300 rounded-2xl rounded-tl-none p-5 max-w-3xl shadow-sm">
+                    <p class="leading-relaxed">
+                        Welcome to your secure local terminal. I can translate your plain English questions into SQLite queries and analyze the results. 
+                    </p>
+                    <p class="mt-2 text-sm text-slate-400">Try asking a question to get started:</p>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <button class="sample-btn text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-brand-500/50 rounded-lg px-3 py-2 text-slate-200 transition-all cursor-pointer">
+                            <i class="fa-solid fa-trophy mr-1 text-amber-400"></i> Best performing trader
+                        </button>
+                        <button class="sample-btn text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-brand-500/50 rounded-lg px-3 py-2 text-slate-200 transition-all cursor-pointer">
+                            <i class="fa-solid fa-arrow-trend-down mr-1 text-red-400"></i> Worst PnL for Emma Jenkins
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer class="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-dark-950 via-dark-950 to-transparent">
+            <form id="chat-form" class="max-w-4xl mx-auto relative group">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i class="fa-solid fa-terminal text-slate-500 group-focus-within:text-brand-400 transition-colors"></i>
+                </div>
+                <input type="text" id="user-input" required autocomplete="off"
+                    placeholder="Query your database... e.g., 'List the top 5 funds by Daily PnL'" 
+                    class="w-full bg-dark-900/90 backdrop-blur-xl border border-slate-700 rounded-xl pl-11 pr-16 py-4 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all shadow-xl placeholder-slate-500">
+                
+                <button type="submit" id="submit-btn"
+                    class="absolute inset-y-2 right-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg px-4 flex items-center justify-center transition-all cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+            <p class="text-center text-[10px] text-slate-600 mt-3">AI can make mistakes. Verify critical financial data against raw tables.</p>
+        </footer>
+
+    </main>
 
     <script src="script.js"></script>
 </body>

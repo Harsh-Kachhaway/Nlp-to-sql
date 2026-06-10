@@ -13,7 +13,7 @@ if GOOGLE_API_KEY:
     os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
 # 2. THE TOGGLE: Set this to True to use Ollama, or False to use Gemini
-USE_LOCAL_OLLAMA = True 
+USE_LOCAL_OLLAMA = False 
 
 def get_sql_agent(db_path="sqlite:///data/out.db"):
     """

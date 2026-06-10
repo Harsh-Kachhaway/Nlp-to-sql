@@ -1,8 +1,12 @@
 fastapi
 uvicorn
-langchain-core
-langchain-ollama
-langchain-google-genai
-langchain-community
-sqlalchemy
+gradio
+requests
 pandas
+openpyxl
+sqlalchemy
+langchain
+langchain-community
+langchain-google-genai
+langchain-ollama
+python-dotenv

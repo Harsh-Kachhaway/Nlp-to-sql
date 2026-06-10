@@ -7,14 +7,11 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine
 
-# Import application constants and settings from your detailed config
 from app.config import APP_NAME, APP_VERSION, DEBUG_MODE, DB_URI
 # Import the chat router module
 from app.api import chat
 
-# Initialize connection engine for Excel migrations
-# Adjust the fallback URI if your DB file resides elsewhere
-# DB_URL = "sqlite:///out.db"
+
 db_engine = create_engine(DB_URI)
 
 # 1. Initialize the FastAPI Application
@@ -28,10 +25,10 @@ app = FastAPI(
 # 2. Configure CORS (Cross-Origin Resource Sharing)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],             # Allows requests from any local frontend file/Gradio client
+    allow_origins=["*"],           
     allow_credentials=True,
-    allow_methods=["*"],             # Allows GET, POST, OPTIONS, etc.
-    allow_headers=["*"],             # Allows custom headers (like Content-Type)
+    allow_methods=["*"],             
+    allow_headers=["*"],            
 )
 
 # 3. Register Existing Application Routers

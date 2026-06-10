@@ -15,7 +15,7 @@ if GOOGLE_API_KEY:
 # 2. THE TOGGLE: Set this to True to use Ollama, or False to use Gemini
 USE_LOCAL_OLLAMA = False 
 
-def get_sql_agent(db_path="sqlite:///data/out.db"):
+def get_sql_agent(db_path=DB_URI):
     """
     Creates and returns a LangChain SQL Agent connected to our database.
     It automatically switches between Ollama and Gemini based on the toggle.
@@ -34,7 +34,7 @@ def get_sql_agent(db_path="sqlite:///data/out.db"):
         print("🤖 Booting Local Engine: Ollama (Mock/Testing Mode)")
         # Make sure you have pulled this model in your terminal: `ollama run gemma2:2b`
         llm = ChatOllama(
-            model="qwen2.5-coder:7b", 
+            model="sqlcoder", 
             # model="llama3.2:3b", 
             temperature=0
         )
@@ -60,10 +60,8 @@ def get_sql_agent(db_path="sqlite:///data/out.db"):
 # If you run this file directly (instead of importing it), it will test the agent
 if __name__ == "__main__":
     
-    # Ensure your path points to wherever your out.db actually is
-    test_db_path = "sqlite:///out.db" 
     
-    agent = get_sql_agent(test_db_path)
+    agent = get_sql_agent(DB_URI)
     
     if agent:
         print("\n--- Testing the Agent ---")

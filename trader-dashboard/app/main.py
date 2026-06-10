@@ -8,14 +8,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine
 
 # Import application constants and settings from your detailed config
-from app.config import APP_NAME, APP_VERSION, DEBUG_MODE
+from app.config import APP_NAME, APP_VERSION, DEBUG_MODE, DB_URI
 # Import the chat router module
 from app.api import chat
 
 # Initialize connection engine for Excel migrations
 # Adjust the fallback URI if your DB file resides elsewhere
-DB_URL = "sqlite:///out.db"
-db_engine = create_engine(DB_URL)
+# DB_URL = "sqlite:///out.db"
+db_engine = create_engine(DB_URI)
 
 # 1. Initialize the FastAPI Application
 app = FastAPI(

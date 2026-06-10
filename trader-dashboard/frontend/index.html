@@ -3,153 +3,366 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TraderBlotter | AI Terminal</title>
+    <title>TraderBlotter AI Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        brand: {
-                            400: '#2dd4bf', // Teal 400
-                            500: '#14b8a6', // Teal 500
-                            600: '#0d9488', // Teal 600
-                        },
-                        dark: {
-                            900: '#0f172a', // Slate 900
-                            950: '#020617', // Slate 950
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        body { background-color: #020617; }
-        
-        /* Premium Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; border: 2px solid #020617; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        :root {
+            --bg-main: #030712;
+            --bg-sidebar: #0b1329;
+            --bg-card: #111b36;
+            --bg-input: #070d1e;
+            --border-color: #1f2d54;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --accent-teal: #2dd4bf;
+            --accent-glow: rgba(45, 212, 191, 0.15);
+            --bg-chat-user: #1e293b;
+            --bg-chat-bot: #0f172a;
+        }
 
-        /* Markdown Styles for AI Responses */
-        .markdown-body p { margin-bottom: 0.75rem; }
-        .markdown-body pre { background: #0f172a; padding: 1rem; border-radius: 0.5rem; border: 1px solid #1e293b; overflow-x: auto; margin-top: 0.5rem; margin-bottom: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;}
-        .markdown-body code { color: #2dd4bf; background: #0f172a; padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.85em; }
-        .markdown-body table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 1rem; font-size: 0.875rem; }
-        .markdown-body th, .markdown-body td { border: 1px solid #334155; padding: 0.5rem 0.75rem; text-align: left; }
-        .markdown-body th { background-color: #0f172a; color: #94a3b8; font-weight: 500; }
-        .markdown-body strong { color: #f8fafc; font-weight: 600; }
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Sidebar / Control Panel --- */
+        .sidebar {
+            width: 360px;
+            background: linear-gradient(180deg, var(--bg-sidebar) 0%, #060b18 100%);
+            border-right: 1px solid var(--border-color);
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.25);
+            z-index: 10;
+        }
+
+        .brand-section h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, #2dd4bf 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-section p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 6px 0 0 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .divider {
+            border: 0;
+            border-top: 1px solid var(--border-color);
+            margin: 4px 0;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Stylized File Input Wrapper */
+        .file-upload-wrapper {
+            position: relative;
+            background-color: var(--bg-input);
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+
+        .file-upload-wrapper:hover {
+            border-color: var(--accent-teal);
+            background-color: rgba(45, 212, 191, 0.02);
+        }
+
+        .file-upload-wrapper input[type="file"] {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-upload-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Standard Text Input Styling */
+        input[type="text"] {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 14px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent-teal);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        /* Button Custom UI */
+        .action-btn {
+            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+            color: #ffffff;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.15s ease, opacity 0.2s ease;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+        }
+
+        .action-btn:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+
+        .action-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Diagnostic Log Viewer */
+        .logs {
+            background-color: #02040a;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #38bdf8;
+            height: 140px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        /* --- Main App Terminal View --- */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .header {
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(11, 19, 41, 0.4);
+            backdrop-filter: blur(8px);
+        }
+
+        .header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399;
+            padding: 6px 14px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        /* Chat Window Stream */
+        .chat-feed {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: radial-gradient(circle at 50% 50%, #060b18 0%, var(--bg-main) 100%);
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 16px 20px;
+            border-radius: 14px;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #334155;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message.assistant {
+            background: linear-gradient(135deg, var(--bg-card) 0%, #0b1123 100%);
+            border: 1px solid var(--border-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        /* Engine tag inside AI Message */
+        .engine-tag {
+            display: block;
+            font-size: 11px;
+            color: var(--accent-teal);
+            margin-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 6px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* Interactive Input Deck */
+        .input-area {
+            padding: 24px 32px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 16px;
+            background-color: rgba(11, 19, 41, 0.4);
+        }
+
+        .input-area input {
+            flex: 1;
+        }
+
+        .input-area .execute-btn {
+            background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%);
+            color: var(--bg-main);
+            border: none;
+            padding: 0 28px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(45, 212, 191, 0.2);
+        }
+
+        .input-area .execute-btn:hover {
+            opacity: 0.95;
+            box-shadow: 0 4px 20px rgba(45, 212, 191, 0.4);
+        }
+
+        /* --- Scrollbar Customization --- */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
     </style>
 </head>
-<body class="text-slate-300 font-sans h-screen flex overflow-hidden">
+<body>
 
-    <aside class="w-64 bg-dark-900 border-r border-slate-800 hidden md:flex flex-col shrink-0">
-        <div class="p-5 border-b border-slate-800">
-            <h1 class="text-xl font-bold tracking-tight text-brand-400 flex items-center gap-2">
-                <i class="fa-solid fa-chart-line"></i> TraderBlotter
-            </h1>
-            <p class="text-xs text-slate-500 mt-1">Data Query Terminal v1.0</p>
+    <div class="sidebar">
+        <div class="brand-section">
+            <h2>TraderBlotter Terminal</h2>
+            <p>Data Layer Matrix v2.1</p>
         </div>
         
-        <div class="p-5 flex-1 overflow-y-auto">
-            <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Database Schema</h2>
-            
-            <div class="mb-4">
-                <div class="flex items-center gap-2 text-slate-300 text-sm font-medium mb-1.5">
-                    <i class="fa-solid fa-table text-brand-500/70"></i> funds
-                </div>
-                <div class="pl-6 text-xs text-slate-500 font-mono space-y-1">
-                    <p>id (INT) <span class="text-amber-500/70 ml-1">PK</span></p>
-                    <p>name (VARCHAR)</p>
-                    <p>short_code (VARCHAR)</p>
-                </div>
+        <hr class="divider">
+        
+        <div class="form-group">
+            <label>Workbook Ingestion Source</label>
+            <div class="file-upload-wrapper">
+                <span class="file-upload-text">📁 Drop Excel file here or click to browse</span>
+                <input type="file" id="excelFile" accept=".xlsx, .xls">
             </div>
+        </div>
 
+        <div class="form-group">
+            <label for="mappings">Table Target Mappings</label>
+            <input type="text" id="mappings" placeholder="e.g., Sheet1=funds, Sheet2=daily_pnl">
+        </div>
+
+        <button id="uploadBtn" class="action-btn">Ingest & Normalize Matrix</button>
+
+        <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
+            <label>Pipeline Console logs</label>
+            <div id="logOutput" class="logs">Status: System Core Idle...</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
             <div>
-                <div class="flex items-center gap-2 text-slate-300 text-sm font-medium mb-1.5">
-                    <i class="fa-solid fa-table text-brand-500/70"></i> daily_pnl
-                </div>
-                <div class="pl-6 text-xs text-slate-500 font-mono space-y-1">
-                    <p>id (INT) <span class="text-amber-500/70 ml-1">PK</span></p>
-                    <p>valuation_date (DATE)</p>
-                    <p>trader_name (VARCHAR)</p>
-                    <p>daily_pnl (BIGINT)</p>
-                    <p>account_id (INT) <span class="text-blue-400/70 ml-1">FK</span></p>
-                </div>
+                <h3>Interactive Analytics Feed</h3>
+                <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0 0 0;">Ask plain language questions about your trade book layers.</p>
+            </div>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                FastAPI Secure Proxy
             </div>
         </div>
 
-        <div class="p-4 border-t border-slate-800">
-            <div class="flex items-center gap-3 px-3 py-2 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                <div class="relative flex h-2.5 w-2.5">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-500"></span>
-                </div>
-                <span class="text-xs font-medium text-slate-300">FastAPI Connected</span>
-            </div>
-        </div>
-    </aside>
-
-    <main class="flex-1 flex flex-col relative bg-dark-950">
-        
-        <header class="md:hidden flex items-center justify-between p-4 border-b border-slate-800 bg-dark-900/80 backdrop-blur-md z-10">
-            <h1 class="text-lg font-bold text-brand-400"><i class="fa-solid fa-chart-line"></i> TraderBlotter</h1>
-            <div class="h-2 w-2 rounded-full bg-brand-500 shadow-[0_0_8px_rgba(20,184,166,0.8)]"></div>
-        </header>
-
-        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth pb-32">
-            
-            <div class="flex justify-start mb-6">
-                <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mr-3 shrink-0">
-                    <i class="fa-solid fa-robot text-brand-400 text-sm"></i>
-                </div>
-                <div class="bg-dark-900 border border-slate-800 text-slate-300 rounded-2xl rounded-tl-none p-5 max-w-3xl shadow-sm">
-                    <p class="leading-relaxed">
-                        Welcome to your secure local terminal. I can translate your plain English questions into SQLite queries and analyze the results. 
-                    </p>
-                    <p class="mt-2 text-sm text-slate-400">Try asking a question to get started:</p>
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        <button class="sample-btn text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-brand-500/50 rounded-lg px-3 py-2 text-slate-200 transition-all cursor-pointer">
-                            <i class="fa-solid fa-trophy mr-1 text-amber-400"></i> Best performing trader
-                        </button>
-                        <button class="sample-btn text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-brand-500/50 rounded-lg px-3 py-2 text-slate-200 transition-all cursor-pointer">
-                            <i class="fa-solid fa-arrow-trend-down mr-1 text-red-400"></i> Worst PnL for Emma Jenkins
-                        </button>
-                    </div>
-                </div>
-            </div>
-
+        <div class="chat-feed" id="chatFeed">
+            <div class="message assistant">Analytical loop framework online. Provide trade sheets or prompt queries against existing table records.</div>
         </div>
 
-        <footer class="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-dark-950 via-dark-950 to-transparent">
-            <form id="chat-form" class="max-w-4xl mx-auto relative group">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <i class="fa-solid fa-terminal text-slate-500 group-focus-within:text-brand-400 transition-colors"></i>
-                </div>
-                <input type="text" id="user-input" required autocomplete="off"
-                    placeholder="Query your database... e.g., 'List the top 5 funds by Daily PnL'" 
-                    class="w-full bg-dark-900/90 backdrop-blur-xl border border-slate-700 rounded-xl pl-11 pr-16 py-4 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all shadow-xl placeholder-slate-500">
-                
-                <button type="submit" id="submit-btn"
-                    class="absolute inset-y-2 right-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg px-4 flex items-center justify-center transition-all cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <i class="fa-solid fa-paper-plane"></i>
-                </button>
-            </form>
-            <p class="text-center text-[10px] text-slate-600 mt-3">AI can make mistakes. Verify critical financial data against raw tables.</p>
-        </footer>
-
-    </main>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Formulate data requests (e.g., 'Total PnL for Emma Jenkins yesterday')..." onkeydown="if(event.key === 'Enter') sendMessage()">
+            <button onclick="sendMessage()" class="execute-btn">Execute</button>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>

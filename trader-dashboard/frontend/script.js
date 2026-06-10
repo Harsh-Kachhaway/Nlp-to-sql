@@ -1,125 +1,92 @@
-const chatForm = document.getElementById('chat-form');
-const userInput = document.getElementById('user-input');
-const chatContainer = document.getElementById('chat-container');
-const submitBtn = document.getElementById('submit-btn');
+const BASE_URL = "http://127.0.0.1:8000";
 
-// --- Feature: Auto-fill Sample Buttons ---
-document.querySelectorAll('.sample-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        // Strip the icon text out
-        userInput.value = e.currentTarget.innerText.trim();
-        userInput.focus();
-    });
-});
+// --- Multi-Sheet File Ingestion Handler ---
+document.getElementById('uploadBtn').addEventListener('click', async () => {
+    const fileInput = document.getElementById('excelFile');
+    const mappingInput = document.getElementById('mappings');
+    const logOutput = document.getElementById('logOutput');
 
-// --- Feature: Create Chat Bubbles ---
-function appendMessage(role, text, mode = null) {
-    const isUser = role === 'user';
-    const wrapper = document.createElement('div');
-    wrapper.className = `flex ${isUser ? 'justify-end' : 'justify-start'} mb-6 opacity-0 translate-y-4`;
-    wrapper.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
-    
-    // Avatar Column (Only for AI)
-    let avatarHtml = '';
-    if (!isUser) {
-        avatarHtml = `
-            <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mr-3 shrink-0 mt-1 shadow-sm">
-                <i class="fa-solid fa-robot text-brand-400 text-sm"></i>
-            </div>
-        `;
+    if (!fileInput.files || fileInput.files.length === 0) {
+        logOutput.innerText = "❌ Please select an Excel workbook first.";
+        return;
     }
 
-    // Message Bubble
-    const bubble = document.createElement('div');
-    if (isUser) {
-        bubble.className = 'bg-brand-600 text-white font-medium rounded-2xl rounded-tr-none p-4 max-w-2xl text-sm shadow-md';
-        bubble.innerText = text; // Raw text for user input
-    } else {
-        bubble.className = 'bg-dark-900 border border-slate-800 text-slate-200 rounded-2xl rounded-tl-none p-5 max-w-3xl text-sm shadow-md markdown-body w-full';
-        
-        // Use marked.js to parse the Markdown into HTML!
-        // This makes tables, code blocks, and bold text look amazing.
-        bubble.innerHTML = marked.parse(text); 
-        
-        // Add Engine Target Tag
-        if (mode) {
-            const metaTag = document.createElement('div');
-            metaTag.className = 'text-[10px] font-mono text-brand-400/60 mt-4 pt-3 border-t border-slate-800/60 flex items-center gap-1.5';
-            metaTag.innerHTML = `<i class="fa-solid fa-microchip"></i> Engine: ${mode}`;
-            bubble.appendChild(metaTag);
-        }
-    }
-    
-    // Assemble and append
-    if (!isUser) wrapper.innerHTML += avatarHtml;
-    wrapper.appendChild(bubble);
-    chatContainer.appendChild(wrapper);
-    
-    // Trigger entrance animation
-    requestAnimationFrame(() => {
-        wrapper.classList.remove('opacity-0', 'translate-y-4');
-    });
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("sheet_mappings", mappingInput.value.trim());
 
-    // Scroll to the newest message smoothly
-    chatContainer.scrollTo({
-        top: chatContainer.scrollHeight,
-        behavior: 'smooth'
-    });
-    
-    return wrapper;
-}
-
-// --- Feature: Elegant Loading State ---
-function showLoading() {
-    return appendMessage('assistant', `
-        <div class="flex items-center gap-3 text-slate-400 font-mono text-xs py-1">
-            <i class="fa-solid fa-circle-notch fa-spin text-brand-400 text-base"></i>
-            <span>Analyzing database schema and querying SQLite...</span>
-        </div>
-    `);
-}
-
-// --- Main Form Submission ---
-chatForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const question = userInput.value.trim();
-    if (!question) return;
-
-    // 1. Show User Input
-    appendMessage('user', question);
-    userInput.value = '';
-    
-    // 2. Lock UI
-    submitBtn.disabled = true;
-    const loadingBubble = showLoading();
+    logOutput.innerText = "⏳ Uploading workbook and executing type cleansing updates...";
 
     try {
-        // 3. Post to local FastAPI server
-        const response = await fetch('http://127.0.0.1:8000/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ question: question })
+        const response = await fetch(`${BASE_URL}/api/upload-excel`, {
+            method: "POST",
+            body: formData
         });
 
-        const data = await response.json();
-        loadingBubble.remove(); 
-
         if (response.ok) {
-            // Success: Render parsed markdown response
-            appendMessage('assistant', data.answer, data.mode);
+            const data = await response.json();
+            let summary = `✅ ${data.message}\n\n`;
+            data.details.forEach(item => {
+                summary += `📁 Sheet '${item.sheet}' ➔ Table '${item.target_table}' (${item.rows} rows imported)\n`;
+            });
+            logOutput.innerText = summary;
         } else {
-            // Server error handler
-            appendMessage('assistant', `**Server Error:** \`${data.detail || 'Failed to process request'}\``);
+            const errData = await response.json();
+            logOutput.innerText = `❌ Server Error: ${errData.detail || 'Processing failed'}`;
         }
-        
     } catch (error) {
-        loadingBubble.remove();
-        appendMessage('assistant', `**Connection Error:** Could not reach the API. Is your FastAPI server running on \`port 8000\`?`);
-        console.error("Fetch Error:", error);
-    } finally {
-        // Unlock UI
-        submitBtn.disabled = false;
-        userInput.focus();
+        logOutput.innerText = `⚠️ Connection failed: ${error.message}`;
     }
 });
+
+// --- Chat Execution Handler ---
+async function sendMessage() {
+    const userInput = document.getElementById('userInput');
+    const chatFeed = document.getElementById('chatFeed');
+    const queryText = userInput.value.trim();
+
+    if (!queryText) return;
+
+    // Append User Message to UI
+    appendMessage(queryText, 'user');
+    userInput.value = "";
+
+    // Append Placeholder AI Response element while loading
+    const aiMessageDiv = appendMessage("⚡ AI is generating SQL and analyzing...", 'assistant');
+
+    try {
+        const response = await fetch(`${BASE_URL}/api/chat`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ question: queryText })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            // Clean up answer and apply the engine metric tag
+            aiMessageDiv.innerHTML = `${data.answer}<span class="engine-tag">⚡ Engine: ${data.mode}</span>`;
+        } else {
+            const errData = await response.json();
+            aiMessageDiv.innerText = `❌ Backend Error: ${errData.detail || 'Unknown error'}`;
+        }
+    } catch (error) {
+        aiMessageDiv.innerText = `⚠️ Connection Error: ${error.message}`;
+    }
+
+    // Scroll feed to bottom
+    chatFeed.scrollTop = chatFeed.scrollHeight;
+}
+
+// Helper to push text blocks cleanly onto feed
+function appendMessage(text, sender) {
+    const chatFeed = document.getElementById('chatFeed');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${sender}`;
+    msgDiv.innerText = text;
+    chatFeed.appendChild(msgDiv);
+    chatFeed.scrollTop = chatFeed.scrollHeight;
+    return msgDiv;
+}

@@ -42,6 +42,15 @@ The application maps the current database state and attaches it directly as a sy
 
 Both the Gradio engine wrapper and the native vanilla HTML5 application function as completely decoupled clients. They communicate asynchronously via JSON payloads over standard network networks to your laptop, acting as the centralized hosting server.
 
+Application Screenshots
+Here are some images showing the operational layouts of the system terminals and execution layers:
+<img width="1919" height="1079" alt="Screenshot 2026-06-10 212606" src="https://github.com/user-attachments/assets/a34ecaae-ffd4-4230-93fc-b4907e8e90d4" />
+<img width="1919" height="1077" alt="Screenshot 2026-06-10 212440" src="https://github.com/user-attachments/assets/7fc0f484-20c6-4a57-a20f-26c93e7b2312" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-06-10 at 21 32 30" src="https://github.com/user-attachments/assets/69b90cc6-ecb7-45f5-b584-72e555c41c4b" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-06-10 at 21 32 29" src="https://github.com/user-attachments/assets/1426444d-268e-4058-b206-5dad168abfcb" />
+<img width="1919" height="1077" alt="Screenshot 2026-06-10 212744" src="https://github.com/user-attachments/assets/f675f4a9-2d0f-47a5-886b-62002c9b89f5" />
+
+
 ---
 
 ## Troubleshooting
